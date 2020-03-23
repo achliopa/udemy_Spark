@@ -1060,4 +1060,58 @@ movieDataset = spark.createDataFrame(movies)
 
 ### Lecture 43. Introducing MLLib
 
-* 
+* MLLib Capabilities
+    * Feature extraction: term frequency / inverse document frequency (TF/IDF) useful for search
+    * basic statistics: Chi-squared test, Pearson or Spearman correlation, min,max,mean,variance
+    * Linear Regression, logistic regression
+    * Support Vector machines
+    * Naive Bayes Classifier
+    * Decision Trees
+    * K-Means Clustering
+    * Principal component analysis, singular value decomposition
+    * Recommendations using Alternating Least Squares
+* Special MLLib Data Types
+    * Vectors (Dense or Sparse)
+    * LabeledPoint
+    * Rating
+* For more info check [Advanced Analytcs with Spark](http://shop.oreilly.com/product/0636920035091.do)
+* We ll make some movie recommendations using MLLib
+* MLLib uses RDDs under the hood. if we use an RDD action more than once we need to cache it
+
+### Lecture 44. [Activity] Using MLLib to Produce Movie Recommendations
+
+* for this to work we need to add a dummy user in the dataset u.data with 3 fake reviwes
+```
+0   50  5   881250949
+0   172 5   881250949
+0   133 1   881250949
+```
+* we import ALS from mllib `from pyspark.mllib.recommendation import ALS, Rating`
+* data loading is like always
+* the ALS specific code is 
+```
+# Build the recommendation model using Alternating Least Squares
+print("\nTraining recommendation model...")
+rank = 10
+# Lowered numIterations to ensure it works on lower-end systems
+numIterations = 6
+model = ALS.train(ratings, rank, numIterations)
+
+userID = int(sys.argv[1])
+
+print("\nRatings for user ID " + str(userID) + ":")
+userRatings = ratings.filter(lambda l: l[0] == userID)
+for rating in userRatings.collect():
+    print(nameDict[int(rating[1])] + ": " + str(rating[2]))
+
+print("\nTop 10 recommendations:")
+recommendations = model.recommendProducts(userID, 10)
+for recommendation in recommendations:
+    print(nameDict[int(recommendation[1])] +
+          " score " + str(recommendation[2]))
+```
+
+### Lecture 45. Analyzing the ALS Recommendations Results
+
+* results are not ok
+* seems like algorithm is not working
